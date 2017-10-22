@@ -20,6 +20,7 @@ DATA_FILE = 'data/data.json'
 
 
 def main():
+    # TODO redo with dates added
     arguments = docopt(__doc__)
 
     if arguments['-d']:
@@ -36,7 +37,12 @@ def main():
     if arguments['-f']:
         scrape_blurbs.run(urls)
     else:
-        update.run(urls)
+        while True:
+            try:
+                update.run(urls)
+            except Exception as e:
+                print(e)
+                break
 
 
 if __name__ == '__main__':

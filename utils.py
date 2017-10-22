@@ -14,7 +14,29 @@ def already_exists(cand, src):
         return False
 
 
+def parse_date(date):
+    month_chart = {
+        'Jan': '1',
+        'Feb': '2',
+        'Mar': '3',
+        'Apr': '4',
+        'May': '5',
+        'Jun': '6',
+        'Jul': '7',
+        'Aug': '8',
+        'Sep': '9',
+        'Oct': '10',
+        'Nov': '11',
+        'Dec': '12'
+    }
+    day = date.split(' ')[0]
+    mon = date.split(' ')[1]
+    yer = date.split(' ')[2]
+    return '{}.{}.{}'.format(day, month_chart[mon], yer)
+
+
 def dump(dat, dest):
+    # TODO don't hardcode filename, create folder if not exists
     if type(dat) is list and len(dat) > 1:
         with open(dest, "r+") as res:
             try:
@@ -35,6 +57,7 @@ def dump(dat, dest):
                 elif type(check) is not bool:
                     print('Updating entry...')
                     res_dec[check]['status'] = d['status']
+                    print('[{}]{} updated!'.format(check, d['title']))
                     updated += 1
 
             print('Writing to file...')

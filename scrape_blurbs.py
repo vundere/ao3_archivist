@@ -33,9 +33,6 @@ def run(cd):
             cd['single']['search'] = cd['single']['cat']
 
     for cat in cd:
-        if cat != 'starwars':
-            print('Skipping {}...'.format(cat))
-            continue
         result = []
         page = requests.get(cd[cat]['cat'])
         page_tree = html.fromstring(page.content)

@@ -1,8 +1,7 @@
 from grab import fetch
-import pprint as pp
 from utils import dump
 
-OUTPUT_FILE = "data/feed.json"
+OUTPUT_FILE = "data/bank.json"
 
 
 def collect(cats):
@@ -15,14 +14,6 @@ def collect(cats):
             print('{}\nFailed fetching {}'.format(e, cat))
     print('Collection successful.')
     return delivery
-
-
-def pp_res(dat):
-    if type(dat) is list and len(dat) > 1:
-        for d in dat:
-            pp.pprint(d)
-    else:
-        print("Invalid input.")
 
 
 def run(cd):
