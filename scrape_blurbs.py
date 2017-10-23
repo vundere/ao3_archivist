@@ -38,14 +38,20 @@ def in_validation(cd):
         return cd
 
 
-def mp_grab(c):
+def mp_grab(c, ident):
+    """
+    Slightly altered version of the retrieval loop.
+    This can probably be simplified and split up further to reduce duplicate code.
+    """
     result = []
     page = requests.get(c['cat'])
     page_tree = html.fromstring(page.content)
     pages = get_no_pages(page_tree)
     for i in range(1, int(pages) + 1):
         try:
+            sys.stdout.write('Process {} fetching page {} of {}...'.format(ident, i, pages))
             result += fetch(c['search'].format(str(i)))
+            sys.stdout.flush()
         except Exception as e:
             print('{}\ni = {}'.format(e, i))
     return result
@@ -59,8 +65,8 @@ def multi(cd):
 
     with Pool(len(cd)) as p:
         payload = []
-        for cat in cd:
-            payload += p.apply_async(mp_grab, args=(cd[cat],)).get()
+        for i, cat in enumerate(cd):
+            payload += p.apply_async(mp_grab, args=(cd[cat], i)).get()
     dump(payload, OUTPUT_FILE)
 
 
@@ -75,8 +81,8 @@ def run(urls):
         print('Fetching data from {}'.format(cat))
         for i in range(1, int(pages) + 1):
             try:
-                result += fetch(cd[cat]['search'].format(str(i)))
                 sys.stdout.write('Fetching page {} of {}...'.format(i, pages))
+                result += fetch(cd[cat]['search'].format(str(i)))
                 sys.stdout.flush()
             except Exception as e:
                 print('{}\ni = {}'.format(e, i))
