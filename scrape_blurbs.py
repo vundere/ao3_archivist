@@ -1,5 +1,6 @@
 import requests
 import sys
+from multiprocessing import Pool
 from grab import fetch
 from lxml import html
 from utils import dump
@@ -20,7 +21,7 @@ def get_no_pages(tree):
     return r
 
 
-def run(cd):
+def in_validation(cd):
     if type(cd) is str:
         print('Input is string')
         cd = {'single': {'cat': cd}}
@@ -32,6 +33,39 @@ def run(cd):
             cd['single']['search'] = full_p_link.replace('page=2', 'page={}')
         except IndexError:
             cd['single']['search'] = cd['single']['cat']
+        return cd
+    else:
+        return cd
+
+
+def mp_grab(c):
+    result = []
+    page = requests.get(c['cat'])
+    page_tree = html.fromstring(page.content)
+    pages = get_no_pages(page_tree)
+    for i in range(1, int(pages) + 1):
+        try:
+            result += fetch(c['search'].format(str(i)))
+        except Exception as e:
+            print('{}\ni = {}'.format(e, i))
+    return result
+
+
+def multi(cd):
+    if type(cd) is str:
+        # We don't need to run multiprocessing for a single category.
+        run(cd)
+        return
+
+    with Pool(len(cd)) as p:
+        payload = []
+        for cat in cd:
+            payload += p.apply_async(mp_grab, args=(cd[cat],)).get()
+    dump(payload, OUTPUT_FILE)
+
+
+def run(urls):
+    cd = in_validation(urls)
 
     for cat in cd:
         result = []
