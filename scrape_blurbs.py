@@ -59,8 +59,6 @@ class Downloader(object):
             constr += 'Process {} fetching page {} of {}... | '.format(k, v['page'], v['pages'])
 
         return constr
-        # sys.stdout.write(constr)
-        # sys.stdout.flush()
 
     def mp_grab(self, c):
         """
@@ -72,10 +70,8 @@ class Downloader(object):
         pages = get_no_pages(page_tree)
         for i in range(1, int(pages) + 1):
             try:
-                # sys.stdout.write('\rProcess {} fetching page {} of {}...'.format(os.getpid(), i, pages))
                 sys.stdout.write(self.prep_print(os.getpid(), i, pages))
                 sys.stdout.flush()
-                # self.prep_print(os.getpid(), i, pages)
                 self.__payload += fetch(c['search'].format(str(i)))
             except KeyboardInterrupt:
                 print('Kehberb.')
@@ -91,7 +87,6 @@ class Downloader(object):
             self.run()
             return
         with Pool(len(self.__data)) as p:
-            # p.map(self.mp_grab, [self.__data[cat] for cat in self.__data])
             apply = [p.apply_async(self.mp_grab, (self.__data[cat],)) for cat in self.__data]
             r = [res.get() for res in apply]  # TODO maybe use this?
         dump(self.__payload, OUTPUT_FILE)
