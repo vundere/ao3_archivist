@@ -20,7 +20,6 @@ DATA_FILE = 'data/data.json'
 
 
 def main():
-    # TODO redo with dates added
     arguments = docopt(__doc__)
 
     if arguments['-d']:

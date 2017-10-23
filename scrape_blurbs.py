@@ -1,14 +1,15 @@
 import requests
+import sys
 from grab import fetch
 from lxml import html
 from utils import dump
 
 
-pag_xpath = '//*[@id="main"]/ol[1]/li'
 OUTPUT_FILE = 'data/bank.json'
 
 
 def get_no_pages(tree):
+    pag_xpath = '//*[@id="main"]/ol[1]/li'
     pag_len = len(tree.xpath(pag_xpath)) - 1
     new_x = '{}[{}]/{}'.format(pag_xpath, pag_len, 'a')
     try:
@@ -37,12 +38,12 @@ def run(cd):
         page = requests.get(cd[cat]['cat'])
         page_tree = html.fromstring(page.content)
         pages = get_no_pages(page_tree)
-        print('Starting fetch of {} pages...'.format(pages))
-
+        print('Fetching data from {}'.format(cat))
         for i in range(1, int(pages) + 1):
             try:
                 result += fetch(cd[cat]['search'].format(str(i)))
-                print('Fetching page {}...'.format(i))
+                sys.stdout.write('Fetching page {} of {}...'.format(i, pages))
+                sys.stdout.flush()
             except Exception as e:
                 print('{}\ni = {}'.format(e, i))
-            dump(result, OUTPUT_FILE)  # Can be moved out of the loop(s), but early stopping will yield no data.
+        dump(result, OUTPUT_FILE)  # Can be moved out of the loop(s), but early stopping will yield no data.

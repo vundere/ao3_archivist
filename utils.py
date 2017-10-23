@@ -1,4 +1,6 @@
 import json
+import os
+import errno
 from json import JSONDecodeError
 
 
@@ -37,33 +39,38 @@ def parse_date(date):
 
 def dump(dat, dest):
     # TODO don't hardcode filename, create folder if not exists
-    if type(dat) is list and len(dat) > 1:
-        with open(dest, "r+") as res:
-            try:
-                res_dec = json.load(res)
-                ident = len(res_dec)
-            except JSONDecodeError:
-                res_dec = {}
-                ident = 1
-                print("Empty output file.")
+    try:
+        os.makedirs('data')
+        with open(dest, 'w'):
+            # Hopefully creates an empty file if there is none.
+            pass
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
 
-            new, updated = 0, 0
-            for d in dat:
-                check = already_exists(d, res_dec)
-                if not check:
-                    res_dec[ident] = d
-                    ident += 1
-                    new += 1
-                elif type(check) is not bool:
-                    print('Updating entry...')
-                    res_dec[check]['status'] = d['status']
-                    print('[{}]{} updated!'.format(check, d['title']))
-                    updated += 1
+    with open(dest, "r+") as res:
+        try:
+            res_dec = json.load(res)
+            ident = len(res_dec)
+        except JSONDecodeError:
+            res_dec = {}
+            ident = 1
+            print("Empty output file.")
 
-            print('Writing to file...')
-            res.seek(0)
-            res.truncate()
-            json.dump(res_dec, res, indent=4)
-        print("{} new fetched, {} updated.".format(new, updated))
-    else:
-        print("Invalid input.")
+        new, updated = 0, 0
+        for d in dat:
+            check = already_exists(d, res_dec)
+            if not check:
+                res_dec[ident] = d
+                ident += 1
+                new += 1
+            elif type(check) is not bool:
+                res_dec[check]['status'] = d['status']
+                print('[{}]{} updated!'.format(check, d['title']))
+                updated += 1
+
+        print('Writing to file...')
+        res.seek(0)
+        res.truncate()
+        json.dump(res_dec, res, indent=4)
+    print("{} new fetched, {} updated.".format(new, updated))
