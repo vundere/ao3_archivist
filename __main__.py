@@ -13,9 +13,9 @@ Options:
 
 import json
 import update
-import scrape_blurbs
 import sys
 from docopt import docopt
+from scrape_blurbs import Downloader
 
 DATA_FILE = 'data/data.json'
 
@@ -34,12 +34,14 @@ def main():
         with open(DATA_FILE, 'r') as c:
             urls = json.load(c)
 
+    d = Downloader(urls)
+
     if arguments['-f']:
         if sys.platform == "win32":
             # Check is only in place to prevent multiprocessing if run on an rpi.
-            scrape_blurbs.multi(urls)
+            d.multi()
         else:
-            scrape_blurbs.run(urls)
+            d.run()
     else:
         while True:
             try:

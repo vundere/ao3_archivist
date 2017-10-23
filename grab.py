@@ -34,7 +34,7 @@ def fetch(url):
     for element in elements:
         # TODO clean up these
         link = element.xpath("div/h4/a[1]")[0]
-        author = element.xpath('div/h4/a[2]')[0]
+
         summary = element.xpath("blockquote/p/text()")
         tags = element.xpath('ul/li/a[1][not(class="warnings")]')
         fandoms = element.xpath("div/h5/a")
@@ -43,12 +43,15 @@ def fetch(url):
         stats = element.xpath('dl')
 
         href = link.get("href")
-        author = author.text_content()
         status = iscomplete.get("title")
         title = link.text_content()
         taglist = ([tag.text_content() for tag in tags])
         fandlist = ([f.text_content() for f in fandoms])
         last_upd = datetime.text_content()
+        try:
+            author = element.xpath('div/h4/a[2]')[0].text_content()
+        except IndexError:
+            author = 'Anonymous'
 
         if summary:
             summary = "\n".join([str(x) for x in summary])

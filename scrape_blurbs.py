@@ -1,6 +1,9 @@
 import requests
 import sys
-from multiprocessing import Pool
+import os
+import traceback
+import pprint as pp
+from multiprocessing import Pool, Manager
 from grab import fetch
 from lxml import html
 from utils import dump
@@ -38,52 +41,76 @@ def in_validation(cd):
         return cd
 
 
-def mp_grab(c, ident):
-    """
-    Slightly altered version of the retrieval loop.
-    This can probably be simplified and split up further to reduce duplicate code.
-    """
-    result = []
-    page = requests.get(c['cat'])
-    page_tree = html.fromstring(page.content)
-    pages = get_no_pages(page_tree)
-    for i in range(1, int(pages) + 1):
-        try:
-            sys.stdout.write('Process {} fetching page {} of {}...'.format(ident, i, pages))
-            result += fetch(c['search'].format(str(i)))
-            sys.stdout.flush()
-        except Exception as e:
-            print('{}\ni = {}'.format(e, i))
-    return result
+class Downloader(object):
+    def __init__(self, dat):
+        manager = Manager()
+        self.__payload = []
+        self.__data = dat
+        self.__processes = manager.dict()
 
+    def prep_print(self, pid, ind, tot):
+        self.__processes[pid] = {
+            'page': ind,
+            'pages': tot
+        }
 
-def multi(cd):
-    if type(cd) is str:
-        # We don't need to run multiprocessing for a single category.
-        run(cd)
-        return
+        constr = '\r'
+        for k, v in self.__processes.items():
+            constr += 'Process {} fetching page {} of {}... | '.format(k, v['page'], v['pages'])
 
-    with Pool(len(cd)) as p:
-        payload = []
-        for i, cat in enumerate(cd):
-            payload += p.apply_async(mp_grab, args=(cd[cat], i)).get()
-    dump(payload, OUTPUT_FILE)
+        return constr
+        # sys.stdout.write(constr)
+        # sys.stdout.flush()
 
-
-def run(urls):
-    cd = in_validation(urls)
-
-    for cat in cd:
-        result = []
-        page = requests.get(cd[cat]['cat'])
+    def mp_grab(self, c):
+        """
+        Slightly altered version of the retrieval loop.
+        This can probably be simplified and split up further to reduce duplicate code.
+        """
+        page = requests.get(c['cat'])
         page_tree = html.fromstring(page.content)
         pages = get_no_pages(page_tree)
-        print('Fetching data from {}'.format(cat))
         for i in range(1, int(pages) + 1):
             try:
-                sys.stdout.write('Fetching page {} of {}...'.format(i, pages))
-                result += fetch(cd[cat]['search'].format(str(i)))
+                # sys.stdout.write('\rProcess {} fetching page {} of {}...'.format(os.getpid(), i, pages))
+                sys.stdout.write(self.prep_print(os.getpid(), i, pages))
                 sys.stdout.flush()
+                # self.prep_print(os.getpid(), i, pages)
+                self.__payload += fetch(c['search'].format(str(i)))
+            except KeyboardInterrupt:
+                print('Kehberb.')
+                break
             except Exception as e:
-                print('{}\ni = {}'.format(e, i))
-        dump(result, OUTPUT_FILE)  # Can be moved out of the loop(s), but early stopping will yield no data.
+                print(type(e).__name__)
+                traceback.print_tb(e.__traceback__)
+                # return result
+
+    def multi(self):
+        if type(self.__data) is str:
+            # We don't need to run multiprocessing for a single category.
+            self.run()
+            return
+        with Pool(len(self.__data)) as p:
+            # p.map(self.mp_grab, [self.__data[cat] for cat in self.__data])
+            apply = [p.apply_async(self.mp_grab, (self.__data[cat],)) for cat in self.__data]
+            r = [res.get() for res in apply]  # TODO maybe use this?
+        dump(self.__payload, OUTPUT_FILE)
+
+    def run(self):
+        cd = in_validation(self.__data)
+
+        for cat in cd:
+            result = []
+            page = requests.get(cd[cat]['cat'])
+            page_tree = html.fromstring(page.content)
+            pages = get_no_pages(page_tree)
+            print('Fetching data from {}'.format(cat))
+            for i in range(1, int(pages) + 1):
+                try:
+                    sys.stdout.write('\rFetching page {} of {}...'.format(i, pages))
+                    result += fetch(cd[cat]['search'].format(str(i)))
+                    sys.stdout.flush()
+                except Exception as e:
+                    print('{}\ni = {}'.format(e, i))
+            dump(result, OUTPUT_FILE)  # Can be moved out of the loop(s), but early stopping will yield no data.
+

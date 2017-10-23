@@ -41,9 +41,6 @@ def dump(dat, dest):
     # TODO don't hardcode filename, create folder if not exists
     try:
         os.makedirs('data')
-        with open(dest, 'w'):
-            # Hopefully creates an empty file if there is none.
-            pass
     except OSError as e:
         if e.errno != errno.EEXIST:
             raise
@@ -69,7 +66,7 @@ def dump(dat, dest):
                 print('[{}]{} updated!'.format(check, d['title']))
                 updated += 1
 
-        print('Writing to file...')
+        print('\nWriting to file...')
         res.seek(0)
         res.truncate()
         json.dump(res_dec, res, indent=4)
