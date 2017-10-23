@@ -2,7 +2,6 @@ import requests
 import sys
 import os
 import traceback
-import pprint as pp
 from multiprocessing import Pool, Manager
 from grab import fetch
 from lxml import html
@@ -44,8 +43,8 @@ def in_validation(cd):
 class Downloader(object):
     def __init__(self, dat):
         manager = Manager()
-        self.__payload = []
         self.__data = dat
+        self.__payload = manager.list()
         self.__processes = manager.dict()
 
     def prep_print(self, pid, ind, tot):
@@ -54,9 +53,9 @@ class Downloader(object):
             'pages': tot
         }
 
-        constr = '\r'
+        constr = '\r\tCollected data: {} | '.format(len(self.__payload))
         for k, v in self.__processes.items():
-            constr += 'Process {} fetching page {} of {}... | '.format(k, v['page'], v['pages'])
+            constr += ' {}: {}/{}... | '.format(k, v['page'], v['pages'])
 
         return constr
 
@@ -84,14 +83,14 @@ class Downloader(object):
     def multi(self):
         if type(self.__data) is str:
             # We don't need to run multiprocessing for a single category.
-            self.run()
+            self.single()
             return
         with Pool(len(self.__data)) as p:
             apply = [p.apply_async(self.mp_grab, (self.__data[cat],)) for cat in self.__data]
             r = [res.get() for res in apply]  # TODO maybe use this?
         dump(self.__payload, OUTPUT_FILE)
 
-    def run(self):
+    def single(self):
         cd = in_validation(self.__data)
 
         for cat in cd:
@@ -109,3 +108,8 @@ class Downloader(object):
                     print('{}\ni = {}'.format(e, i))
             dump(result, OUTPUT_FILE)  # Can be moved out of the loop(s), but early stopping will yield no data.
 
+    def run(self):
+        if 'multiprocessing' not in sys.modules:
+            self.single()
+        else:
+            self.multi()

@@ -15,7 +15,7 @@ import json
 import update
 import sys
 from docopt import docopt
-from scrape_blurbs import Downloader
+from downloader import Downloader
 
 DATA_FILE = 'data/data.json'
 
@@ -41,7 +41,7 @@ def main():
             # Check is only in place to prevent multiprocessing if run on an rpi.
             d.multi()
         else:
-            d.run()
+            d.single()
     else:
         while True:
             try:
