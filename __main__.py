@@ -7,6 +7,7 @@ Options:
     -h         Show this screen.
     -d         Verbose logging.
     -f         Full scrape.
+    -n         Runs it without multiprocessing
     -s         Specific url to grab.
 
 """
@@ -37,7 +38,7 @@ def main():
     d = Downloader(urls)
 
     if arguments['-f']:
-        if sys.platform == "win32":
+        if not arguments['-n']:
             # Check is only in place to prevent multiprocessing if run on an rpi.
             d.scrape(multi=True)
         else:

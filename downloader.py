@@ -186,8 +186,7 @@ class Downloader(object):
 
     def scrape(self, multi=False):
         if multi:
-            if 'multiprocessing' not in sys.modules:
-                self._singlescrape()
-            else:
-                self._multiscrape()
+            self._multiscrape()
+        else:
+            self._singlescrape()
 
