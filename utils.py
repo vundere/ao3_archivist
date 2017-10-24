@@ -1,4 +1,12 @@
 import logging
+import os
+import errno
+import json
+import requests
+from lxml import html
+from json import JSONDecodeError
+
+lg = logging.getLogger('archivist')
 
 
 def already_exists(cand, src):
@@ -56,3 +64,67 @@ def end_logging(log):
     for hdlr in handlers:
         hdlr.close()
         log.removeHandler(hdlr)
+
+
+def get_no_pages(tree):
+    pag_xpath = '//*[@id="main"]/ol[1]/li'
+    pag_len = len(tree.xpath(pag_xpath)) - 1
+    new_x = '{}[{}]/{}'.format(pag_xpath, pag_len, 'a')
+    try:
+        r = tree.xpath(new_x)[0].text_content()
+    except Exception as e:
+        print(e)
+        r = '1'
+    return r
+
+
+def in_validation(cd):
+    if type(cd) is str:
+        print('Input is string')
+        cd = {'single': {'cat': cd}}
+        page = requests.get(cd['single']['cat'])
+        page_tree = html.fromstring(page.content)
+        try:
+            pagination_link = page_tree.xpath('//*[@id="main"]/ol[1]/li[3]/a')[0].get('href')
+            full_p_link = "http://archiveofourown.org" + pagination_link
+            cd['single']['search'] = full_p_link.replace('page=2', 'page={}')
+        except IndexError:
+            cd['single']['search'] = cd['single']['cat']
+        return cd
+    else:
+        return cd
+
+
+def dump(dat, dest):
+    # TODO don't hardcode filename, create folder if not exists
+    try:
+        os.makedirs('data')
+    except OSError as e:
+        if e.errno != errno.EEXIST:
+            raise
+
+    with open(dest, "r+") as res:
+        try:
+            res_dec = json.load(res)
+            ident = len(res_dec)
+        except JSONDecodeError:
+            res_dec = {}
+            ident = 0
+
+        new, updated = 0, 0
+        for d in dat:
+            check = already_exists(d, res_dec)
+            if not check:
+                ident += 1
+                res_dec[ident] = d
+                new += 1
+                lg.info('New fic fetched, title {}.'.format(d['title']))
+            elif type(check) is not bool:
+                updated += 1
+                res_dec[check] = d
+                lg.info('{} updated.'.format(check))
+
+        res.seek(0)
+        res.truncate()
+        json.dump(res_dec, res, indent=4)
+    return {'new': new, 'updated': updated}

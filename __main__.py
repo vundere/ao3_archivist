@@ -8,15 +8,16 @@ Options:
     -d         Verbose logging.
     -f         Full scrape.
     -n         Runs it without multiprocessing
-    -s         Specific url to grab.
+    -s=URL     Specific url to grab.
+    -r         Rude mode (disables polite wait timer)
 
 """
 
 import json
-import sys
+import logging
+import utils
 from docopt import docopt
 from downloader import Downloader
-import utils
 
 DATA_FILE = 'data/data.json'
 
@@ -25,8 +26,7 @@ def main():
     arguments = docopt(__doc__)
 
     if arguments['-d']:
-        # Disabled for now
-        # logging.basicConfig(level=logging.DEBUG)
+        logger.basicConfig(level=logging.DEBUG)
         pass
 
     if arguments['-s']:
@@ -35,11 +35,14 @@ def main():
         with open(DATA_FILE, 'r') as c:
             urls = json.load(c)
 
-    d = Downloader(urls)
+    if arguments['-r']:
+        wait = 0
+    else:
+        wait = 0.3
+    d = Downloader(urls, wait)
 
     if arguments['-f']:
         if not arguments['-n']:
-            # Check is only in place to prevent multiprocessing if run on an rpi.
             d.scrape(multi=True)
         else:
             d.scrape()
