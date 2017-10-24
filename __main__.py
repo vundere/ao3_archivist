@@ -12,10 +12,10 @@ Options:
 """
 
 import json
-import update
 import sys
 from docopt import docopt
 from downloader import Downloader
+import utils
 
 DATA_FILE = 'data/data.json'
 
@@ -39,17 +39,14 @@ def main():
     if arguments['-f']:
         if sys.platform == "win32":
             # Check is only in place to prevent multiprocessing if run on an rpi.
-            d.multi()
+            d.scrape(multi=True)
         else:
-            d.single()
+            d.scrape()
     else:
-        while True:
-            try:
-                update.run(urls)
-            except Exception as e:
-                print(e)
-                break
+        d.update()
 
 
 if __name__ == '__main__':
+    logger = utils.setup_logging('archivist.log')
     main()
+    utils.end_logging(logger)

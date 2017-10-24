@@ -1,6 +1,7 @@
 import json
 import os
 import errno
+import logging
 from json import JSONDecodeError
 
 
@@ -52,7 +53,6 @@ def dump(dat, dest):
         except JSONDecodeError:
             res_dec = {}
             ident = 1
-            print("Empty output file.")
 
         new, updated = 0, 0
         for d in dat:
@@ -71,3 +71,27 @@ def dump(dat, dest):
         res.truncate()
         json.dump(res_dec, res, indent=4)
     print("{} new fetched, {} updated.".format(new, updated))
+
+
+def setup_logging(lfile):
+    try:
+        lg = logging.getLogger('archivist')
+        lg.setLevel(logging.INFO)
+        handler = logging.FileHandler(filename=lfile, encoding='utf-8', mode='a')
+        fmt = logging.Formatter('[%(asctime)s]:%(module)s:%(levelname)s: %(message)s', datefmt='%H:%M:%S')
+        handler.setFormatter(fmt)
+        lg.addHandler(handler)
+        return lg
+    except PermissionError as e:
+        print('{}\n'
+              'WARNING: Logging not enabled.\n'
+              'If you get this error, change your IDE working directory.\n'
+              'The application will still work, but nothing will be logged.'.format(e))
+        # In PyCharm, go to Run>Edit Configuration to set the working directory to the calendarize folder.
+
+
+def end_logging(log):
+    handlers = log.handlers[:]
+    for hdlr in handlers:
+        hdlr.close()
+        log.removeHandler(hdlr)
