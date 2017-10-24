@@ -2,16 +2,13 @@ import requests
 import sys
 import os
 import traceback
-import errno
-import json
 import datetime
 import logging
 from time import sleep
-from json import JSONDecodeError
 from multiprocessing import Pool, Manager
 from grab import fetch
 from lxml import html
-from utils import dump, in_validation,
+from utils import dump, in_validation, get_no_pages
 
 
 OUTPUT_FILE = 'data/bank.json'
