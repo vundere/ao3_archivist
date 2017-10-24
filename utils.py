@@ -1,8 +1,4 @@
-import json
-import os
-import errno
 import logging
-from json import JSONDecodeError
 
 
 def already_exists(cand, src):
@@ -36,41 +32,6 @@ def parse_date(date):
     mon = date.split(' ')[1]
     yer = date.split(' ')[2]
     return '{}.{}.{}'.format(day, month_chart[mon], yer)
-
-
-def dump(dat, dest):
-    # TODO don't hardcode filename, create folder if not exists
-    try:
-        os.makedirs('data')
-    except OSError as e:
-        if e.errno != errno.EEXIST:
-            raise
-
-    with open(dest, "r+") as res:
-        try:
-            res_dec = json.load(res)
-            ident = len(res_dec)
-        except JSONDecodeError:
-            res_dec = {}
-            ident = 1
-
-        new, updated = 0, 0
-        for d in dat:
-            check = already_exists(d, res_dec)
-            if not check:
-                res_dec[ident] = d
-                ident += 1
-                new += 1
-            elif type(check) is not bool:
-                res_dec[check]['status'] = d['status']
-                print('[{}]{} updated!'.format(check, d['title']))
-                updated += 1
-
-        print('\nWriting to file...')
-        res.seek(0)
-        res.truncate()
-        json.dump(res_dec, res, indent=4)
-    print("{} new fetched, {} updated.".format(new, updated))
 
 
 def setup_logging(lfile):

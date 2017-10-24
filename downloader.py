@@ -91,6 +91,7 @@ class Downloader(object):
         self.__processes = manager.dict()
 
     def _fprint(self, pid, ind, tot):
+        # TODO clean up the string building process
         self.__processes[pid] = {
             'page': ind,
             'pages': tot
@@ -102,27 +103,15 @@ class Downloader(object):
 
         return constr
 
-    def _uprint(self, pid, c, complete):
-        # Currently does not work as intended
-        self.__processes[pid] = {
-            'current': c
-        }
-        prefix = '\r\t\x1b[k'
-        constr = prefix + 'Collected data: {} | '.format(len(self.__payload))
-        for k, v in self.__processes.items():
-            if complete:
-                constr += 'PID{}: {} DONE! | '.format(k, v['current'])
-            else:
-                constr += 'PID{}: {}...! | '.format(k, v['current'])
-            # constr += ' {} new, {} updated.'.format(self.__stats['new'], self.__stats['updated'])
-
-        return constr
-
     def _full_grab(self, c):
         """
         Slightly altered version of the retrieval loop.
         This can probably be simplified and split up further to reduce duplicate code.
         """
+        if type(c) is str:
+            # Don't need multiprocessing for a single target.
+            self._singlescrape()
+            return
         page = requests.get(c['cat'])
         page_tree = html.fromstring(page.content)
         pages = get_no_pages(page_tree)
