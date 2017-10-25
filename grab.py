@@ -71,7 +71,3 @@ def fetch(url, headers):
         })
 
     return results
-
-
-if __name__ == '__main__':
-    fetch("http://archiveofourown.org/tags/Angel's%20Feather/works")
