@@ -9,8 +9,13 @@ Options:
     -f         Full scrape.
     -n         Runs it without multiprocessing
     -s=URL     Specific url to grab.
-    -r         Rude mode (disables polite wait timer)
+    -p         Impatient mode (disables polite wait timer)
+    -i         Ignores robots.txt
 
+NOTE: Since ao3 has a robots.txt file that will block most, if not all of this. Sorry...
+
+For building the data most efficiently, run this with -fpi
+Update functionality currently does not work as intended.
 """
 
 import json
