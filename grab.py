@@ -23,7 +23,7 @@ def parse_stats(elem):
     return statdict
 
 
-def fetch(url):
+def fetch(url, headers):
     results = []
     page = requests.get(url)
     page_tree = html.fromstring(page.content)

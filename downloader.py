@@ -21,6 +21,7 @@ class Downloader(object):
         manager = Manager()
         self.__data = dat
         self.__pause = pause
+        self.__headers = {'User-Agent': 'ao3_archivist (https://github.com/vundere/ao3_archivist)'}
         self.__payload = manager.list()
         self.__processes = manager.dict()
 
@@ -46,14 +47,14 @@ class Downloader(object):
             # Don't need multiprocessing for a single target.
             self._singlescrape()
             return
-        page = requests.get(c['cat'])
+        page = requests.get(c['cat'], headers=self.__headers)
         page_tree = html.fromstring(page.content)
         pages = get_no_pages(page_tree)
         for i in range(1, int(pages) + 1):
             try:
                 sys.stdout.write(self._fprint(os.getpid(), i, pages))
                 sys.stdout.flush()
-                self.__payload += fetch(c['search'].format(str(i)))
+                self.__payload += fetch(c['search'].format(str(i)), self.__headers)
                 sleep(self.__pause)
             except KeyboardInterrupt:
                 print('Kehberb.')
@@ -78,14 +79,14 @@ class Downloader(object):
         cd = in_validation(self.__data)
         result = []
         for cat in cd:
-            page = requests.get(cd[cat]['cat'])
+            page = requests.get(cd[cat]['cat'], headers=self.__headers)
             page_tree = html.fromstring(page.content)
             pages = get_no_pages(page_tree)
             print('Fetching data from {}'.format(cat))
             for i in range(1, int(pages) + 1):
                 try:
                     sys.stdout.write('\rFetching page {} of {}...'.format(i, pages))
-                    result += fetch(cd[cat]['search'].format(str(i)))
+                    result += fetch(cd[cat]['search'].format(str(i)), self.__headers)
                     sys.stdout.flush()
                 except Exception as e:
                     print('{}\ni = {}'.format(e, i))
@@ -94,7 +95,7 @@ class Downloader(object):
     def _collect(self, c):
         try:
             lg.info('Collecting...')
-            self.__payload += fetch(self.__data[c]['cat'])
+            self.__payload += fetch(self.__data[c]['cat'], self.__headers)
         except Exception as e:
             print('{}\nFailed fetching {}'.format(e, c))
 
