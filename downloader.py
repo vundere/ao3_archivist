@@ -16,9 +16,6 @@ OUTPUT_FILE = 'data/bank.json'
 lg = logging.getLogger('archivist')
 
 
-
-
-
 class Downloader(object):
     def __init__(self, dat, pause):
         manager = Manager()
