@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <link rel="stylesheet" href="../static/style.css">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
+    <script type="text/javascript" src="../static/scripts.js"></script>
+</head>
+<body onload="setInterval(getUpdates, 5000)">
+    <div id="newcounter"></div>
+    <div class="displaybox" id="leftdisplay">
+        <ul id="update_list">
+        </ul>
+        <div class="visitbtn" onclick="loadMore()">Load More...</div>
+    </div>
+    <div class="displaybox" id="rightdisplay">
+        <div id="stitle">Title:</div>
+        <div id="dtitle"></div>
+        <div id="dtags"></div>
+        <div id="ssummary">Summary:</div>
+        <div id="dsummary"></div>
+    </div>
+</body>
+</html>
