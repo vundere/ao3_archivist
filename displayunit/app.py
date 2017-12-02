@@ -4,6 +4,7 @@ import logging
 
 app = Flask(__name__)
 app.debug = True
+# TODO use global vars for filenames
 
 lg = logging.getLogger('DisplayUnitLogger')
 hdlr = logging.FileHandler(filename='du.log', mode='a')
@@ -51,8 +52,6 @@ def more():
         with open('../data/feed.json', 'r') as feed:
             data = json.load(feed)
             payload = {k: data[k] for k in sorted(data, key=int, reverse=True)[:count]}
-            from pprint import pformat as pf
-            lg.info(pf(payload))
             return json.dumps(payload)
     return ''
 
